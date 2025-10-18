@@ -1,0 +1,269 @@
+✅ FULL PROMPT — “Timer Red/Green v0.1 PWA (Final Version)”
+
+You are a professional web app developer.
+Create a fully working Progressive Web App (PWA) called “Timer Red/Green” (Version 0.1) that targets Android Chrome on a Google Pixel.
+The PWA must be installable, work offline, and include all specified files and icons.
+
+🧭 App Overview
+
+The app is a Red/Green interval timer with selectable routines.
+It alternates between red and green phases, displaying a countdown and a routine phrase.
+It plays beeps in the last 5 seconds of each phase and a 3-tone chime when complete.
+
+🧩 Core Features
+Setup Screen
+
+Displays four input controls and one button:
+
+Cycle Repetitions (1–3)
+
+Label: “Cycle Repetitions (1–3)”
+
+Minimum: 1
+
+Maximum: 3
+
+Default placeholder: 1
+
+This value multiplies the number of items in the selected routine list to get total cycles.
+
+Routine (select box)
+
+Label: “Routine”
+
+Yellow background with black bold text.
+
+Options (with preset lists):
+
+Loosen Up → THIS IS ONE, THIS IS TWO, THIS IS THREE, THIS IS FOUR, THIS IS FIVE
+
+Strength → Number A, Number G, Number Aa, Number gh
+
+Stretching → rrrrrrr, bbbb, dddd
+
+When a routine is selected, a yellow box to the right displays its list of items (scrollable if needed).
+
+Red seconds
+
+Label: “Red seconds”
+
+Box background: same red as the countdown phase (#D32F2F)
+
+Text: white
+
+Minimum: 5
+
+Maximum: 1000
+
+Step: 5
+
+Default placeholder: 0
+
+Green seconds
+
+Label: “Green seconds”
+
+Box background: same green as countdown phase (#2E7D32)
+
+Text: white
+
+Minimum: 5
+
+Maximum: 1000
+
+Step: 5
+
+Default placeholder: 0
+
+Start Button
+
+Blue background (#1976D2)
+
+White text, 2.5× larger than normal button text.
+
+Full width of the form.
+
+Label: “Start”.
+
+🎨 Layout and Visuals
+
+Inputs are left-aligned to the left of the Start button.
+
+The Routine Items list box is to the right of the inputs:
+
+Yellow background
+
+Black, non-bold text
+
+Scrolls if too many items
+
+Large enough to fit ~6 items visible
+
+Title:
+
+Text: Timer Red/Green
+
+Color: white
+
+Version label underneath in small gray text: Version 0.1
+
+Background color (setup screen): dark gray/black #111111.
+
+Font: system default (Segoe UI, Roboto, or similar).
+
+Responsive layout that fits vertically on a phone.
+
+⏱️ Run Screen Behavior
+
+When Start is pressed:
+
+Validate that red and green seconds are between 5–1000 and multiples of 5.
+
+Multiply the number of list items × repetitions to set total cycles.
+
+The app switches to the run screen (full screen).
+
+Run screen:
+
+Shows:
+
+Large countdown number (font-size: clamp(96px, 37.5vh, 270px), white)
+
+Routine text phrase above it (about 3× normal text size)
+
+Two buttons at bottom: Pause/Resume and Stop
+
+Behavior:
+
+Red phase → Green phase → repeat
+
+Countdown updates every second
+
+Beeps once each on 5,4,3,2,1 seconds (using Web Audio API)
+
+Each beep optionally triggers a short vibration
+
+When the final cycle ends → play 3 ascending tones (660, 880, 1100 Hz)
+
+Routine phrase:
+
+Shown on both red and green screens
+
+The green phase shows the same item as the previous red
+
+Only advances to next phrase when returning to red
+
+After final chime → show “setup” screen again (same input values saved)
+
+🔉 Audio & Vibration
+
+Unlock audio on first user interaction.
+
+Use Web Audio API:
+
+Beep: sine tone 880 Hz, 120 ms, fade in/out envelope.
+
+Chime: 3 tones (660, 880, 1100 Hz), each 160 ms, 180 ms apart.
+
+If available, trigger navigator.vibrate(30) on each beep.
+
+🔋 Other Behaviors
+
+Use Screen Wake Lock API if supported.
+
+Auto-pause if tab/app is backgrounded.
+
+LocalStorage can optionally save last used inputs.
+
+🧱 PWA Structure
+
+Generate a ZIP package containing these files:
+
+red-green-timer-v0.1.zip
+ ├─ index.html
+ ├─ manifest.webmanifest
+ ├─ sw.js
+ ├─ prompt.txt  (contains this exact prompt)
+ └─ icons/
+     ├─ icon-192.png
+     └─ icon-512.png
+
+manifest.webmanifest
+{
+  "name": "Timer Red/Green",
+  "short_name": "RG Timer",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+
+sw.js
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open('rg-timer-v1').then(cache => cache.addAll([
+      'index.html',
+      'manifest.webmanifest',
+      'icons/icon-192.png',
+      'icons/icon-512.png'
+    ]))
+  );
+});
+self.addEventListener('fetch', e => {
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+});
+
+🖼️ App Icons
+
+Create two icons (icon-192.png, icon-512.png) with this design:
+
+Dark rounded square background (#141414)
+
+Circle split half red (#D32F2F) / half green (#2E7D32)
+
+White “RG” letters centered
+
+Export both 192×192 and 512×512 PNG
+
+🪜 Installation Steps (Kid-Friendly)
+
+Download and unzip the ZIP file.
+
+On your computer, open a terminal in that folder.
+
+Run:
+
+python -m http.server 8000
+
+
+On your Pixel phone (same Wi-Fi), open Chrome → go to
+
+http://<your-computer-ip>:8000
+
+
+Tap ⋮ → Add to Home screen or Install app.
+
+Open from your home screen.
+
+Tap Routine → Loosen Up → Start
+→ Red/Green screens appear with countdown, beeps, and routine phrases.
+
+⚙️ Output Format
+
+Return a single downloadable ZIP file named:
+red-green-timer-v0.1.zip
+containing all required files.
+
+The app must run locally when served from:
+
+python -m http.server 8000
+
+
+and be installable on Chrome Android.
+
+✅ End of Prompt (for v0.1)
+Added full creation prompt for version 0.1
