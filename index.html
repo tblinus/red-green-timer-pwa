@@ -3,455 +3,221 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Red/Green Timer</title>
+  <title>Timer Red/Green v0.1</title>
   <link rel="manifest" href="manifest.webmanifest">
   <meta name="theme-color" content="#111111">
   <style>
-    :root{
-      --bg:#111111;
-      --light-red:#ffcdd2;
-      --light-green:#c8e6c9;
-      --red:#D32F2F;
-      --green:#2E7D32;
-      --text:#ffffff;
-      --black:#000000;
-    }
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: var(--bg);
-      color: var(--text);
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-      -webkit-user-select:none;
-      user-select:none;
-      touch-action: manipulation;
-    }
-    .container{
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 24px;
-      text-align: center;
-    }
-    h1{
-      margin: 0 0 12px 0;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-    }
-    .subtitle{
-      opacity: 0.85;
-      margin-bottom: 24px;
-      font-size: 0.95rem;
-    }
-    label{
-      display:block;
-      margin: 12px auto 8px;
-      color: #fff; /* labels in white as requested */
-      text-align:left;
-      max-width: 300px;
-    }
-    input[type="number"]{
-      width: 50%; /* half width */
-      min-width: 220px;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: none;
-      outline: none;
-      font-size: 1.1rem;
-      text-align:center;
-      display:block;
-      margin: 0 auto 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.25) inset;
-    }
-    #cycles{ background:#ffffff; color:#000000; }  /* white bg + black text */
-    #red{ background: var(--light-red); color:#000000; } /* light red */
-    #green{ background: var(--light-green); color:#000000; } /* light green */
-
-    .btn{
-      display:block;
-      width: 100%;
-      padding: 14px 18px;
-      margin: 12px auto;
-      border-radius: 12px;
-      border: none;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      font-size: 1.05rem;
-      color:#000;
-      background:#fff;
-    }
-    .row{
-      display:flex;
-      gap:12px;
-    }
-    .row .btn{
-      flex:1;
-      width:auto; /* half-width via flex */
-    }
-
-    .note{
-      font-size: 0.9rem;
-      opacity: 0.9;
-      margin-top: 8px;
-    }
-
-    /* Run screen */
-    #runScreen{
-      display:none;
-      width: 100vw;
-      height: 100vh;
-      position: fixed;
-      inset: 0;
-      align-items:center;
-      justify-content:center;
-      flex-direction: column;
-    }
-    #countdown{
-      font-weight: 900;
-      letter-spacing: 0.15em; /* extra letter spacing */
-      text-shadow: 0 6px 16px rgba(0,0,0,0.35);
-      font-size: clamp(96px, 37.5vh, 270px); /* ~150% larger than typical big text */
-      line-height: 0.9;
-      margin-bottom: 18vh;
-      color: #fff;
-    }
-    .controls{
-      position: fixed;
-      bottom: 20px;
-      left: 0; right: 0;
-      display:flex;
-      gap: 12px;
-      justify-content: center;
-      padding: 0 16px;
-    }
-    .controls button{
-      flex: 1;
-      max-width: 240px;
-      padding: 14px 18px;
-      border-radius: 14px;
-      border: none;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-    }
-    .pause{ background: #ffffff; color:#000000; }
-    .stop{ background: #000000; color:#ffffff; border:1px solid #fff; }
-
-    .error{
-      background:#ffebee;
-      color:#b71c1c;
-      padding: 10px 14px;
-      border-radius: 10px;
-      width: fit-content;
-      margin: 12px auto 0;
+    :root{ --bg:#111111; --red:#D32F2F; --green:#2E7D32; --text:#ffffff; --dark-blue:#001F5B; --blue:#1976D2; --yellow:#FFEB3B; }
+    html, body { margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Helvetica,Arial; }
+    h1{ text-align:center; margin:10px 0 2px; font-size:2em; color:white; }
+    h2.version { text-align:center; margin:0 0 10px; font-size:0.9em; color:#ccc; font-weight:400; }
+    #setup { display:block; }
+    .setup-wrap{ width:90%; max-width:720px; margin:0 auto; }
+    .fields-row{ display:flex; gap:16px; align-items:flex-start; justify-content:space-between; }
+    .form-col{ flex:0 0 40%; text-align:left; }
+    .list-col{ flex:1; min-width:280px; resize:horizontal; overflow:auto; }
+    input, select { width:16.67%; padding:10px; border-radius:8px; margin:8px 0; border:none; font-size:1.1rem; }
+    label{ display:block; margin-top:8px; }
+    #cycles{ background:#fff; color:#000; }
+    #red{ background:var(--red); color:#fff; }
+    #green{ background:var(--green); color:#fff; }
+    #routine{ background:var(--yellow); color:#000; font-weight:700; width:60%; min-width:220px; }
+    ::placeholder { color: var(--dark-blue); opacity: 1; }
+    #listBox{ background:var(--yellow); color:#000; font-weight:400; border-radius:10px; padding:12px; box-shadow:0 2px 6px rgba(0,0,0,0.25) inset; }
+    #routineList{ margin:0; padding-left:22px; max-height:14em; overflow:auto; font-size:1rem; }
+    #listBox{ min-height:12em; }
+    .start-row{ margin-top:12px; }
+    #startBtn{ width:100%; background:var(--blue); color:#fff; font-size:1.6em; padding:10px 14px; border:none; border-radius:10px; font-weight:800; letter-spacing:.04em; }
+    #runScreen{ display:none; align-items:center; justify-content:center; flex-direction:column; height:100vh; }
+    #routineText{ font-size:clamp(48px,10vh,84px); font-weight:800; letter-spacing:.06em; color:#fff; margin-top:6vh; text-shadow:0 4px 12px rgba(0,0,0,0.35); }
+    #countdown{ font-size:clamp(96px, 37.5vh, 270px); letter-spacing:0.15em; color:#fff; }
+    .controls{ position:fixed; bottom:20px; left:0; right:0; display:flex; justify-content:center; gap:12px; }
+    .controls button{ padding:12px 16px; border-radius:10px; border:none; }
+  @media (max-width: 520px){
+      .fields-row{ flex-direction:column; }
+      .form-col{ flex:1 1 auto; }
+      .list-col{ width:100%; min-width:0; }
+      #startBtn{ font-size:1.4em; padding:10px; }
     }
   </style>
 </head>
 <body>
-  <div id="setup" class="container">
-    <h1>Red/Green Timer</h1>
-    <div class="subtitle">A simple alternating timer with beeps and a chime.</div>
-
-    <label for="cycles">Number of cycles</label>
-    <input id="cycles" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g., 4">
-
-    <label for="red">Red seconds</label>
-    <input id="red" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g., 30">
-
-    <label for="green">Green seconds</label>
-    <input id="green" type="number" min="1" step="1" inputmode="numeric" placeholder="e.g., 20">
-
-    <button id="startBtn" class="btn">Start</button>
-    <div class="row">
-      <button id="testBtn" class="btn">Test Mode</button>
-      <button id="installBtn" class="btn" style="background:#e0e0e0;">Install…</button>
+  <div id="setup">
+    <h1>Timer Red/Green</h1>
+    <h2 class="version">Version 0.1</h2>
+    <div class="setup-wrap">
+      <div class="fields-row">
+        <div class="form-col">
+          <label>Cycle Repetitions (1–3)</label>
+          <input id="cycles" type="number" min="1" max="3" placeholder="1">
+          <label>Routine</label>
+          <select id="routine">
+            <option value="Loosen Up Standing">Loosen Up Standing</option>
+            <option value="Strength Standing">Strength Standing</option>
+            <option value="Cardio Standing">Cardio Standing</option>
+            <option value="Stretching Standing">Stretching Standing</option>
+            <option value="Loosen Up Seated">Loosen Up Seated</option>
+            <option value="Strength Seated">Strength Seated</option>
+            <option value="Cardio Seated">Cardio Seated</option>
+            <option value="Stretching Seated">Stretching Seated</option>
+          </select>
+          <label>Red seconds</label>
+          <input id="red" type="number" min="5" max="1000" step="5" placeholder="0" style="color:white;">
+          <label>Green seconds</label>
+          <input id="green" type="number" min="5" max="1000" step="5" placeholder="0" style="color:white;">
+        </div>
+        <div class="list-col">
+          <div id="listBox">
+            <strong style="display:block; margin-bottom:6px; font-weight:600; color:#000;">Routine Items</strong>
+            <ol id="routineList"></ol>
+          </div>
+        </div>
+      </div>
+      <div class="start-row">
+        <button id="startBtn">Start</button>
+      </div>
     </div>
-    <div id="msg" class="error" style="display:none;"></div>
-
-    <div class="note">Tip: Use Test Mode to fill 2 cycles, Red 5s, Green 3s, then press Start.</div>
   </div>
 
   <div id="runScreen">
+    <div id="routineText"></div>
     <div id="countdown">0</div>
     <div class="controls">
-      <button id="pauseBtn" class="pause">Pause</button>
-      <button id="stopBtn" class="stop">Stop</button>
+      <button id="pauseBtn">Pause</button>
+      <button id="stopBtn">Stop</button>
     </div>
   </div>
 
   <script>
-    // ------------------ PWA: register service worker ------------------
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').catch(console.error);
       });
     }
 
-    // PWA manual install prompt (optional button)
-    let deferredPrompt = null;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      document.getElementById('installBtn').style.display = 'block';
-    });
-    document.getElementById('installBtn').addEventListener('click', async () => {
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        deferredPrompt = null;
-      } else {
-        alert('In Chrome: tap ⋮ and choose "Add to Home screen" or "Install app".');
-      }
-    });
+    let totalCycles, cycleRepetitions, cyclesRemaining, redSeconds, greenSeconds, remaining, phase, paused, timerId;
+    let redPhaseCount = 0;
+    const routines = {
+      "Loosen Up Standing": ["Semi-Tandem Stand","Tightrope Walking","March & Hold","Kickstand Balance","Side Step","Heel Lifts"],
+      "Strength Standing": ["Sit to Stand","Wall Push-Up","Split Squat","Standing Hip Abduction","Biceps Curl","Calf Raise","Deadlift"],
+      "Cardio Standing": ["March","Mini Kicks","Side Toe Taps","Knee Ups","Hamstring Curl","V-Step Left","V-Step Right"],
+      "Stretching Standing": ["Shoulder Rolls","Side Bends","Forward Fold","Quad Stretch","Hamstring Stretch","Calf Stretch"],
+      "Loosen Up Seated": ["Lean Backs","Shoulder Circles","Seated March","Heel Lifts","Side Toe Taps","Seated Twist"],
+      "Strength Seated": ["Knee Extension","Seated Row","Triceps Extension","Biceps Curl","Clamshells","Seated Deadlift","Calf Raises"],
+      "Cardio Seated": ["Heel Digs","Mini Kicks","Side Toe Taps","Toe Taps Forward","Toe Taps Back","Step Touch","Forward & Back Step"],
+      "Stretching Seated": ["Seated Forward Fold","Shoulder Stretch","Torso Twist","Ankle Circles","Neck Stretch","Seated Side Bend"]
+    };
 
-    // ------------------ Screen Wake Lock (best-effort) ------------------
-    let wakeLock = null;
-    async function requestWakeLock(){
-      try{
-        if ('wakeLock' in navigator) {
-          wakeLock = await navigator.wakeLock.request('screen');
-        }
-      }catch(e){ /* ignore */ }
-    }
-    async function releaseWakeLock(){
-      try{
-        if (wakeLock) { await wakeLock.release(); wakeLock = null; }
-      }catch(e){ /* ignore */ }
-    }
+    const setup=document.getElementById('setup');
+    const run=document.getElementById('runScreen');
+    const countdown=document.getElementById('countdown');
+    const pauseBtn=document.getElementById('pauseBtn');
+    const stopBtn=document.getElementById('stopBtn');
+    const routineText=document.getElementById('routineText');
+    const routineSel=document.getElementById('routine');
+    let routine = routineSel.value;
+    const routineListEl=document.getElementById('routineList');
 
-    // ------------------ State ------------------
-    let totalCycles = 0;
-    let cyclesRemaining = 0;
-    let redSeconds = 0;
-    let greenSeconds = 0;
-    let remaining = 0;
-    let phase = 'red'; // 'red' or 'green'
-    let paused = false;
-    let timerId = null;
     let audioContext = null;
-    let hasInteracted = false;
-
-    const setupEl = document.getElementById('setup');
-    const runScreenEl = document.getElementById('runScreen');
-    const countdownEl = document.getElementById('countdown');
-    const cyclesEl = document.getElementById('cycles');
-    const redEl = document.getElementById('red');
-    const greenEl = document.getElementById('green');
-    const msgEl = document.getElementById('msg');
-    const startBtn = document.getElementById('startBtn');
-    const testBtn = document.getElementById('testBtn');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const stopBtn = document.getElementById('stopBtn');
-
-    // Prefill from localStorage
-    (function prefill(){
-      try{
-        const data = JSON.parse(localStorage.getItem('rgTimerPrefs')||'{}');
-        if (data.cycles) cyclesEl.value = data.cycles;
-        if (data.red) redEl.value = data.red;
-        if (data.green) greenEl.value = data.green;
-      }catch(e){}
-    })();
-
-    function savePrefs(){
-      try{
-        localStorage.setItem('rgTimerPrefs', JSON.stringify({
-          cycles: cyclesEl.value,
-          red: redEl.value,
-          green: greenEl.value
-        }));
-      }catch(e){}
-    }
-
-    // ------------------ Audio ------------------
+    let interacted = false;
     function ensureAudio(){
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (audioContext.state === 'suspended') {
-        audioContext.resume();
-      }
+      if(!audioContext){ audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
+      if(audioContext.state === 'suspended'){ audioContext.resume(); }
     }
-
     function beep(freq=880, duration=120){
-      if (!audioContext) return;
+      if(!audioContext) return;
       const now = audioContext.currentTime;
       const osc = audioContext.createOscillator();
       const gain = audioContext.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, now);
       gain.gain.setValueAtTime(0.0001, now);
-      // quick attack/decay
       gain.gain.exponentialRampToValueAtTime(0.4, now + 0.01);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + duration/1000);
       osc.connect(gain).connect(audioContext.destination);
       osc.start(now);
       osc.stop(now + duration/1000 + 0.05);
-
-      if (navigator.vibrate) {
-        navigator.vibrate(30);
-      }
+      if(navigator.vibrate){ navigator.vibrate(30); }
     }
+    function endChime(){ let t=0; [660,880,1100].forEach(f=>{ setTimeout(()=>beep(f,160), t); t+=180; }); }
+    ['click','touchstart','pointerdown','keydown'].forEach(evt=>{ window.addEventListener(evt, ()=>{ if(!interacted){ interacted=true; ensureAudio(); } }, {once:true, passive:true}); });
 
-    function endChime(){
-      // 3 ascending beeps: 660 -> 880 -> 1100 Hz
-      let t = 0;
-      [660, 880, 1100].forEach((f) => {
-        setTimeout(() => beep(f, 160), t);
-        t += 180;
+    function getPhrases(){
+      return routines[routine] || [];
+    }
+    function renderList(){
+      const phrases = getPhrases();
+      routineListEl.innerHTML = '';
+      phrases.forEach(p=>{
+        const li = document.createElement('li');
+        li.textContent = p;
+        routineListEl.appendChild(li);
       });
     }
 
-    // Unlock audio on first user interaction
-    function primeAudio(){
-      if (hasInteracted) return;
-      hasInteracted = true;
+    routineSel.addEventListener('change', ()=>{ routine = routineSel.value; renderList(); });
+    renderList();
+
+    function snapSeconds(val){
+      if(!Number.isFinite(val)) return 5;
+      val = Math.round(val/5)*5;
+      if(val < 5) val = 5;
+      if(val > 1000) val = 1000;
+      return val;
+    }
+
+    document.getElementById('startBtn').onclick=()=>{
       ensureAudio();
-    }
-    ['click','touchstart','pointerdown','keydown'].forEach(evt =>
-      window.addEventListener(evt, primeAudio, {once:true,passive:true})
-    );
+      cycleRepetitions=parseInt(document.getElementById('cycles').value)||1;
+      if(cycleRepetitions>3) cycleRepetitions=3;
+      if(cycleRepetitions<1) cycleRepetitions=1;
+      redSeconds = snapSeconds(parseInt(document.getElementById('red').value)||0);
+      greenSeconds = snapSeconds(parseInt(document.getElementById('green').value)||0);
+      document.getElementById('red').value = redSeconds;
+      document.getElementById('green').value = greenSeconds;
+      routine = routineSel.value;
 
-    // ------------------ UI helpers ------------------
-    function showError(text){
-      msgEl.textContent = text;
-      msgEl.style.display = 'block';
-      setTimeout(() => { msgEl.style.display = 'none'; }, 2500);
-    }
+      const phrases = getPhrases();
+      totalCycles = phrases.length;
 
-    function setPhaseBackground(){
-      if (phase === 'red') {
-        runScreenEl.style.background = 'var(--red)';
-      } else {
-        runScreenEl.style.background = 'var(--green)';
-      }
-    }
+      redPhaseCount = 0;
+      if(redSeconds < 5 || greenSeconds < 5){ alert('Please enter 5–1000 seconds in 5s steps'); return; }
+      setup.style.display='none';run.style.display='flex';
+      cyclesRemaining = totalCycles * cycleRepetitions;
+      phase='red';remaining=redSeconds;paused=false;
+      run.style.background='var(--red)';countdown.textContent=remaining;
 
-    function showSetup(){
-      releaseWakeLock();
-      clearInterval(timerId);
-      timerId = null;
-      setupEl.style.display = 'block';
-      runScreenEl.style.display = 'none';
-    }
-
-    function showRun(){
-      setupEl.style.display = 'none';
-      runScreenEl.style.display = 'flex';
-    }
-
-    function validateInputs(){
-      const c = parseInt(cyclesEl.value, 10);
-      const r = parseInt(redEl.value, 10);
-      const g = parseInt(greenEl.value, 10);
-      if (!Number.isInteger(c) || c < 1) return [false, 'Please enter a whole number ≥ 1 for cycles.'];
-      if (!Number.isInteger(r) || r < 1) return [false, 'Please enter a whole number ≥ 1 for red seconds.'];
-      if (!Number.isInteger(g) || g < 1) return [false, 'Please enter a whole number ≥ 1 for green seconds.'];
-      return [true, {c, r, g}];
-    }
-
-    function startTimer(){
-      // Save prefs
-      savePrefs();
-
-      // Request wake lock (best-effort)
-      requestWakeLock();
-
-      paused = false;
-      phase = 'red';
-      cyclesRemaining = totalCycles;
-      remaining = redSeconds;
-      setPhaseBackground();
-      updateCountdown();
-
-      timerId = setInterval(tick, 1000);
-    }
-
-    function updateCountdown(){
-      countdownEl.textContent = remaining;
-    }
+      if(routineText){ routineText.textContent = phrases[0]; }
+      clearInterval(timerId);timerId=setInterval(tick,1000);
+    };
 
     function tick(){
-      if (paused) return;
+      if(paused)return;
       remaining--;
-
-      // Beep on last 5..1 seconds of the *current* phase
-      if (remaining >= 1 && remaining <= 5) {
-        beep(880, 120);
-      }
-
-      if (remaining <= 0) {
-        // Switch phase or cycle
-        if (phase === 'red') {
-          phase = 'green';
-          remaining = greenSeconds;
-          setPhaseBackground();
+      if(remaining>=1 && remaining<=5){ beep(880,120); }
+      countdown.textContent=remaining;
+      if(remaining<=0){
+        const phrases = getPhrases();
+        const idx = (redPhaseCount) % phrases.length;
+        if(phase==='red'){
+          phase='green';
+          remaining=greenSeconds;
+          run.style.background='var(--green)';
+          routineText.textContent = phrases[idx];
         } else {
-          // completed a green phase => one cycle done
           cyclesRemaining--;
-          if (cyclesRemaining <= 0) {
-            // done all cycles
-            clearInterval(timerId);
-            timerId = null;
-            endChime();
-            // brief done state, then return
-            setTimeout(() => {
-              showSetup();
-            }, 1200);
-            return;
-          } else {
-            phase = 'red';
-            remaining = redSeconds;
-            setPhaseBackground();
-          }
+          if(cyclesRemaining<=0){ clearInterval(timerId); endChime(); setTimeout(()=>{ setup.style.display='block'; run.style.display='none'; }, 800); return; }
+          redPhaseCount++;
+          phase='red'; remaining=redSeconds; run.style.background='var(--red)';
+          const newIdx = (redPhaseCount) % phrases.length;
+          routineText.textContent = phrases[newIdx];
         }
+        countdown.textContent=remaining;
       }
-
-      updateCountdown();
     }
 
-    // ------------------ Events ------------------
-    startBtn.addEventListener('click', () => {
-      ensureAudio();
-
-      const [ok, vals] = validateInputs();
-      if (!ok) { showError(vals); return; }
-
-      totalCycles = vals.c;
-      redSeconds = vals.r;
-      greenSeconds = vals.g;
-
-      showRun();
-      startTimer();
-    });
-
-    testBtn.addEventListener('click', () => {
-      cyclesEl.value = 2;
-      redEl.value = 5;
-      greenEl.value = 3;
-      savePrefs();
-      showError('Filled test values. Tap Start to begin.');
-    });
-
-    pauseBtn.addEventListener('click', () => {
-      paused = !paused;
-      pauseBtn.textContent = paused ? 'Resume' : 'Pause';
-      ensureAudio();
-    });
-
-    stopBtn.addEventListener('click', () => {
-      ensureAudio();
-      clearInterval(timerId);
-      timerId = null;
-      showSetup();
-    });
-
-    // Auto-pause when backgrounded
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        paused = true;
-        pauseBtn.textContent = 'Resume';
-      }
-    });
+    pauseBtn.onclick=()=>{ paused=!paused; pauseBtn.textContent=paused?'Resume':'Pause'; };
+    stopBtn.onclick=()=>{ clearInterval(timerId); setup.style.display='block'; run.style.display='none'; };
   </script>
 </body>
 </html>
