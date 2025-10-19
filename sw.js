@@ -1,57 +1,35 @@
-const CACHE_NAME = 'rg-timer-v0-3';
-const APP_SHELL_URLS = [
-    './index.html',
-    './manifest.webmanifest',
-    './icon-192.png',
-    './icon-512.png'
+const CACHE = 'rg-timer-v0-3';
+const APP_SHELL = [
+  './',
+  './index.html',
+  './manifest.webmanifest',
+  './routines.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('Opened cache and caching app shell');
-                return cache.addAll(APP_SHELL_URLS);
-            })
-            .catch(err => console.error('Cache addAll failed:', err))
-    );
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(APP_SHELL)));
+  self.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.map(cache => {
-                    if (cache !== CACHE_NAME) {
-                        console.log('Deleting old cache:', cache);
-                        return caches.delete(cache);
-                    }
-                })
-            );
-        })
+self.addEventListener('activate', e => self.clients.claim());
+
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+
+  if (url.pathname.endsWith('/routines.json')) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      }).catch(() => caches.match(e.request))
     );
-});
+    return;
+  }
 
-self.addEventListener('fetch', event => {
-    const requestUrl = new URL(event.request.url);
-
-    // Network-first for routines.json
-    if (requestUrl.pathname.includes('routines.json')) {
-        event.respondWith(
-            fetch(event.request).catch(() => {
-                return caches.match(event.request);
-            })
-        );
-        return;
-    }
-
-    // Cache-first for all other requests
-    event.respondWith(
-        caches.match(event.request).then(cachedResponse => {
-            if (cachedResponse) {
-                return cachedResponse;
-            }
-            return fetch(event.request);
-        })
-    );
+  e.respondWith(
+    caches.match(e.request).then(cached => cached || fetch(e.request))
+  );
 });
