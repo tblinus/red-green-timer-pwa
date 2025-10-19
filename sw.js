@@ -1,35 +1,62 @@
-const CACHE = 'rg-timer-v0-3';
+const CACHE_NAME = 'rg-timer-v0-3';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './routines.json',
   './icon-192.png',
   './icon-512.png'
 ];
 
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(APP_SHELL)));
+// Install event - cache app shell
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => {
+      return cache.addAll(APP_SHELL);
+    })
+  );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', e => self.clients.claim());
+// Activate event - clean up old caches
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames
+          .filter(name => name !== CACHE_NAME)
+          .map(name => caches.delete(name))
+      );
+    })
+  );
+  self.clients.claim();
+});
 
-self.addEventListener('fetch', e => {
-  const url = new URL(e.request.url);
+// Fetch event - network-first for routines.json, cache-first for others
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
 
-  if (url.pathname.endsWith('/routines.json')) {
-    e.respondWith(
-      fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
-        return res;
-      }).catch(() => caches.match(e.request))
+  // Network-first for routines.json
+  if (url.pathname.includes('routines.json')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
+          });
+          return response;
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
     );
     return;
   }
 
-  e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request))
+  // Cache-first for app shell
+  event.respondWith(
+    caches.match(event.request).then(response => {
+      return response || fetch(event.request);
+    })
   );
 });
