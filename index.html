@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Timer Red/Green v0.1</title>
-  <link rel="manifest" href="manifest.webmanifest">
+  <title>Timer Red/Green v0.2 (Reliable Beeps)</title>
+  <link rel="manifest" href="/manifest.webmanifest">
   <meta name="theme-color" content="#111111">
   <style>
     :root{ --bg:#111111; --red:#D32F2F; --green:#2E7D32; --text:#ffffff; --dark-blue:#001F5B; --blue:#1976D2; --yellow:#FFEB3B; }
@@ -44,7 +44,7 @@
 <body>
   <div id="setup">
     <h1>Timer Red/Green</h1>
-    <h2 class="version">Version 0.1</h2>
+    <h2 class="version">Version 0.2 (Reliable Beeps)</h2>
     <div class="setup-wrap">
       <div class="fields-row">
         <div class="form-col">
@@ -91,11 +91,11 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(console.error);
+        navigator.serviceWorker.register('/sw.js').catch(console.error);
       });
     }
 
-    let totalCycles, cycleRepetitions, cyclesRemaining, redSeconds, greenSeconds, remaining, phase, paused, timerId;
+    let totalCycles, cycleRepetitions, cyclesRemaining, redSeconds, greenSeconds, remaining, phase, paused, timerId, rafId;
     let redPhaseCount = 0;
     const routines = {
       "Loosen Up Standing": ["Semi-Tandem Stand","Tightrope Walking","March & Hold","Kickstand Balance","Side Step","Heel Lifts"],
@@ -118,33 +118,57 @@
     let routine = routineSel.value;
     const routineListEl=document.getElementById('routineList');
 
+    // ===== AUDIO =====
     let audioContext = null;
     let interacted = false;
     function ensureAudio(){
       if(!audioContext){ audioContext = new (window.AudioContext || window.webkitAudioContext)(); }
       if(audioContext.state === 'suspended'){ audioContext.resume(); }
     }
-    function beep(freq=880, duration=120){
-      if(!audioContext) return;
-      const now = audioContext.currentTime;
+
+    function createBeepNode(freq, durationMs){
       const osc = audioContext.createOscillator();
       const gain = audioContext.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(freq, now);
+      osc.frequency.value = freq;
+      const dur = durationMs/1000;
+      const now = audioContext.currentTime;
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(0.4, now + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration/1000);
+      gain.gain.linearRampToValueAtTime(0.35, now + 0.01);
+      gain.gain.linearRampToValueAtTime(0.0001, now + dur);
       osc.connect(gain).connect(audioContext.destination);
-      osc.start(now);
-      osc.stop(now + duration/1000 + 0.05);
-      if(navigator.vibrate){ navigator.vibrate(30); }
+      return {osc, gain, dur};
     }
-    function endChime(){ let t=0; [660,880,1100].forEach(f=>{ setTimeout(()=>beep(f,160), t); t+=180; }); }
-    ['click','touchstart','pointerdown','keydown'].forEach(evt=>{ window.addEventListener(evt, ()=>{ if(!interacted){ interacted=true; ensureAudio(); } }, {once:true, passive:true}); });
 
-    function getPhrases(){
-      return routines[routine] || [];
+    function scheduleBeepAt(audioTime, freq=880, duration=120){
+      if(!audioContext) return;
+      const {osc, dur} = createBeepNode(freq, duration);
+      osc.start(audioTime);
+      osc.stop(audioTime + (duration/1000) + 0.02);
+      if(navigator.vibrate){
+        const delayMs = Math.max(0, (audioTime - audioContext.currentTime) * 1000);
+        setTimeout(()=>navigator.vibrate(30), delayMs);
+      }
     }
+
+    function scheduleEndChime(startAudioTime){
+      const tones = [660, 880, 1100];
+      let t = startAudioTime;
+      for(const f of tones){
+        scheduleBeepAt(t, f, 160);
+        t += 0.18;
+      }
+    }
+
+    ['click','touchstart','pointerdown','keydown'].forEach(evt=>{
+      window.addEventListener(evt, ()=>{ if(!interacted){ interacted=true; ensureAudio(); } }, {once:true, passive:true});
+    });
+
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible'){ ensureAudio(); }
+    });
+
+    function getPhrases(){ return routines[routine] || []; }
     function renderList(){
       const phrases = getPhrases();
       routineListEl.innerHTML = '';
@@ -166,6 +190,38 @@
       return val;
     }
 
+    let phaseEndAudioTime = null;
+    let scheduledBeepTimes = [];
+
+    function scheduleCountdownBeeps(totalSeconds){
+      if(!audioContext) return;
+      scheduledBeepTimes = [];
+      const nowA = audioContext.currentTime;
+      phaseEndAudioTime = nowA + totalSeconds;
+      for(let k=1;k<=5;k++){
+        if(totalSeconds >= k){
+          const t = phaseEndAudioTime - k;
+          scheduleBeepAt(t);
+          scheduledBeepTimes.push(t);
+        }
+      }
+    }
+
+    function updateCountdownVisual(){
+      if(paused) return;
+      if(!phaseEndAudioTime){ return; }
+      const nowA = audioContext ? audioContext.currentTime : 0;
+      const secLeft = Math.max(0, Math.ceil(phaseEndAudioTime - nowA));
+      countdown.textContent = secLeft;
+      if(secLeft <= 0){ return; }
+      rafId = requestAnimationFrame(updateCountdownVisual);
+    }
+
+    function startVisualLoop(){
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateCountdownVisual);
+    }
+
     document.getElementById('startBtn').onclick=()=>{
       ensureAudio();
       cycleRepetitions=parseInt(document.getElementById('cycles').value)||1;
@@ -185,18 +241,23 @@
       setup.style.display='none';run.style.display='flex';
       cyclesRemaining = totalCycles * cycleRepetitions;
       phase='red';remaining=redSeconds;paused=false;
-      run.style.background='var(--red)';countdown.textContent=remaining;
+      run.style.background='var(--red)';
 
       if(routineText){ routineText.textContent = phrases[0]; }
-      clearInterval(timerId);timerId=setInterval(tick,1000);
+
+      clearInterval(timerId);
+      timerId=setInterval(tick, 200);
+
+      scheduleCountdownBeeps(remaining);
+      startVisualLoop();
     };
 
     function tick(){
-      if(paused)return;
-      remaining--;
-      if(remaining>=1 && remaining<=5){ beep(880,120); }
-      countdown.textContent=remaining;
-      if(remaining<=0){
+      if(paused) return;
+      if(!audioContext) return;
+      const nowA = audioContext.currentTime;
+      const timeLeft = phaseEndAudioTime ? (phaseEndAudioTime - nowA) : 0;
+      if(timeLeft <= 0){
         const phrases = getPhrases();
         const idx = (redPhaseCount) % phrases.length;
         if(phase==='red'){
@@ -206,18 +267,28 @@
           routineText.textContent = phrases[idx];
         } else {
           cyclesRemaining--;
-          if(cyclesRemaining<=0){ clearInterval(timerId); endChime(); setTimeout(()=>{ setup.style.display='block'; run.style.display='none'; }, 800); return; }
+          if(cyclesRemaining<=0){
+            clearInterval(timerId);
+            const startChimeAt = audioContext.currentTime + 0.05;
+            scheduleEndChime(startChimeAt);
+            setTimeout(()=>{ setup.style.display='block'; run.style.display='none'; }, 800);
+            return;
+          }
           redPhaseCount++;
           phase='red'; remaining=redSeconds; run.style.background='var(--red)';
           const newIdx = (redPhaseCount) % phrases.length;
           routineText.textContent = phrases[newIdx];
         }
-        countdown.textContent=remaining;
+        scheduleCountdownBeeps(remaining);
+        startVisualLoop();
       }
     }
 
-    pauseBtn.onclick=()=>{ paused=!paused; pauseBtn.textContent=paused?'Resume':'Pause'; };
-    stopBtn.onclick=()=>{ clearInterval(timerId); setup.style.display='block'; run.style.display='none'; };
+    pauseBtn.onclick=()=>{
+      paused=!paused; pauseBtn.textContent=paused?'Resume':'Pause';
+      if(!paused){ ensureAudio(); startVisualLoop(); }
+    };
+    stopBtn.onclick=()=>{ clearInterval(timerId); cancelAnimationFrame(rafId); setup.style.display='block'; run.style.display='none'; };
   </script>
 </body>
 </html>
