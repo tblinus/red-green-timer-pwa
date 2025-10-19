@@ -1,643 +1,488 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#111111">
-  <title>Red/Green Timer v0.3</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Ubuntu, Cantarell, 'Noto Sans', Helvetica, Arial, sans-serif;
-      background-color: #111111;
-      color: #FFFFFF;
-      transition: background-color 0.3s ease;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-
-    body.red-phase {
-      background-color: #D32F2F;
-    }
-
-    body.green-phase {
-      background-color: #2E7D32;
-    }
-
-    h1 {
-      font-size: 2em;
-      font-weight: bold;
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    .version {
-      font-size: 0.9em;
-      color: #AAAAAA;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .banner {
-      background-color: #fff3cd;
-      border: 2px solid #ffe69c;
-      color: #856404;
-      padding: 12px 20px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      text-align: center;
-      max-width: 600px;
-      width: 100%;
-    }
-
-    #setupScreen {
-      width: 100%;
-      max-width: 800px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .form-container {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .input-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    label {
-      font-size: 1.0rem;
-      color: #FFFFFF;
-      flex-shrink: 0;
-    }
-
-    input[type="number"] {
-      height: 42px;
-      font-size: 1.0rem;
-      border: none;
-      border-radius: 4px;
-      padding-left: 8px;
-      padding-right: 2.6em;
-      color: #000000;
-      background-image: linear-gradient(to right,
-        rgba(255,255,255,0) 0,
-        rgba(255,255,255,0) calc(100% - 2.6em),
-        rgba(255,255,255,0.25) calc(100% - 2.6em),
-        rgba(255,255,255,0.25) 100%);
-    }
-
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-      opacity: 1;
-      filter: invert(1) contrast(1.25);
-      height: 40px;
-    }
-
-    #cyclesInput {
-      width: 90px;
-      background-color: #FFFFFF;
-    }
-
-    #redInput {
-      flex: 1;
-      min-width: 100px;
-      background-color: #D32F2F;
-      color: #FFFFFF;
-    }
-
-    #greenInput {
-      flex: 1;
-      min-width: 100px;
-      background-color: #2E7D32;
-      color: #FFFFFF;
-    }
-
-    #routineSelect {
-      width: 60%;
-      min-width: 220px;
-      height: 42px;
-      background-color: #FFEB3B;
-      color: #000000;
-      border: none;
-      border-radius: 4px;
-      padding: 0 8px;
-      font-size: 1.0rem;
-    }
-
-    #startBtn {
-      width: 100%;
-      height: 56px;
-      background-color: #1976D2;
-      color: #FFFFFF;
-      font-size: 1.6em;
-      font-weight: bold;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    #startBtn:hover {
-      background-color: #1565C0;
-    }
-
-    #startBtn:active {
-      background-color: #0D47A1;
-    }
-
-    .routine-list-panel {
-      background-color: #FFEB3B;
-      color: #000000;
-      border-radius: 10px;
-      padding: 15px;
-      width: 100%;
-      margin-top: 10px;
-    }
-
-    .routine-list-panel h3 {
-      margin-bottom: 10px;
-      font-size: 1.1rem;
-    }
-
-    .routine-list-panel ul {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    .routine-list-panel li {
-      font-size: 1.0rem;
-      padding: 4px 0;
-    }
-
-    #timerScreen {
-      display: none;
-      width: 100%;
-      max-width: 800px;
-      text-align: center;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex-grow: 1;
-    }
-
-    #timerScreen.active {
-      display: flex;
-    }
-
-    #countdown {
-      font-size: clamp(96px, 37.5vh, 270px);
-      font-weight: bold;
-      line-height: 1;
-      margin: 20px 0;
-    }
-
-    #routineItemName {
-      font-size: clamp(48px, 10vh, 84px);
-      font-weight: bold;
-      margin-bottom: 30px;
-    }
-
-    .controls {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .controls button {
-      padding: 12px 30px;
-      font-size: 1.2em;
-      font-weight: bold;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      background-color: #1976D2;
-      color: #FFFFFF;
-      transition: background-color 0.2s;
-    }
-
-    .controls button:hover {
-      background-color: #1565C0;
-    }
-
-    .controls button:active {
-      background-color: #0D47A1;
-    }
-
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.5em;
-      }
-
-      .input-row {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      #routineSelect {
-        width: 100%;
-      }
-
-      input[type="number"] {
-        width: 100%;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red/Green Timer</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <style>
+        :root {
+            --background-color: #111111;
+            --text-color: #FFFFFF;
+            --red-color: #D32F2F;
+            --green-color: #2E7D32;
+            --button-color: #1976D2;
+            --panel-color: #FFEB3B;
+            --banner-color: #fff3cd;
+            --banner-border-color: #ffe69c;
+        }
+        html, body {
+            overscroll-behavior: none;
+        }
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .container {
+            width: 90%;
+            max-width: 480px;
+            text-align: center;
+            padding-top: 2vh;
+        }
+        h1 {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 0;
+        }
+        #version-label {
+            font-size: 0.9em;
+            color: #aaa;
+            margin-top: 5px;
+        }
+        #setup-screen {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-top: 2rem;
+            width: 100%;
+        }
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        .form-row label {
+            font-size: 1.0rem;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+            font-size: 1.2rem;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .spinner-lane {
+            position: relative;
+            flex-grow: 1;
+        }
+        .spinner-lane input {
+             width: 100%;
+             padding-right: 2.6em;
+             background-image: linear-gradient(to right,
+              rgba(255,255,255,0) 0,
+              rgba(255,255,255,0) calc(100% - 2.6em),
+              rgba(255,255,255,0.25) calc(100% - 2.6em),
+              rgba(255,255,255,0.25) 100%);
+        }
+        #cycles-input {
+            width: 90px;
+            height: 42px;
+            background-color: white;
+            color: black;
+        }
+        .seconds-input-container {
+            display: flex;
+            gap: 1rem;
+            flex-grow: 1;
+        }
+        .seconds-input {
+            height: 42px;
+            color: white;
+        }
+        #red-seconds-input { background-color: var(--red-color); }
+        #green-seconds-input { background-color: var(--green-color); }
+        .routine-container {
+            display: flex;
+            gap: 1rem;
+            align-items: stretch;
+        }
+        #routine-selector {
+            width: 60%;
+            min-width: 220px;
+            height: 42px;
+            background-color: var(--panel-color);
+            color: black;
+            font-size: 1.0rem;
+            border: none;
+            border-radius: 5px;
+            padding: 0 10px;
+            text-align: center;
+        }
+        #routine-list-panel {
+            flex-grow: 1;
+            background-color: var(--panel-color);
+            color: black;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: left;
+            overflow-y: auto;
+            max-height: 150px;
+            font-size: 1.0rem;
+        }
+        #start-button {
+            width: 100%;
+            height: 56px;
+            background-color: var(--button-color);
+            color: white;
+            font-size: 1.6em;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        #timer-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: background-color 0.5s;
+        }
+        #countdown {
+            font-size: clamp(96px, 37.5vh, 270px);
+            font-weight: bold;
+            line-height: 1;
+        }
+        #routine-name {
+            font-size: clamp(48px, 10vh, 84px);
+            font-weight: normal;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        #timer-controls {
+            position: absolute;
+            bottom: 30px;
+            display: flex;
+            gap: 1rem;
+        }
+        .timer-button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #banner {
+            display: none;
+            background-color: var(--banner-color);
+            border: 1px solid var(--banner-border-color);
+            color: #664d03;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Red/Green Timer</h1>
+        <p id="version-label">v0.3</p>
 
-  <h1>Red/Green Timer</h1>
-  <div class="version">v0.3</div>
-
-  <div id="banner" class="banner" style="display:none;">
-    Couldn't load routines.json — using built-in routine list.
-  </div>
-
-  <div id="setupScreen">
-    <div class="form-container">
-      <div class="input-row">
-        <label for="cyclesInput">Cycles:</label>
-        <input type="number" id="cyclesInput" min="1" max="3" value="1">
-      </div>
-
-      <div class="input-row">
-        <label for="routineSelect">Routine:</label>
-        <select id="routineSelect">
-          <option value="">Loading...</option>
-        </select>
-      </div>
-
-      <div class="input-row">
-        <label>Red (s):</label>
-        <input type="number" id="redInput" min="1" value="30">
-        <label>Green (s):</label>
-        <input type="number" id="greenInput" min="1" value="15">
-      </div>
-
-      <button id="startBtn">Start</button>
+        <div id="setup-screen">
+            <div id="banner">Couldn’t load routines.json — using built-in routine list.</div>
+            <div class="form-row">
+                <label for="cycles-input">Cycles (1–3)</label>
+                <input type="number" id="cycles-input" min="1" max="3" value="1">
+            </div>
+            <div class="form-row">
+                <label>Seconds</label>
+                <div class="seconds-input-container">
+                    <div class="spinner-lane">
+                        <input type="number" id="red-seconds-input" class="seconds-input" placeholder="Red" min="1" value="20">
+                    </div>
+                     <div class="spinner-lane">
+                        <input type="number" id="green-seconds-input" class="seconds-input" placeholder="Green" min="1" value="10">
+                    </div>
+                </div>
+            </div>
+            <div class="routine-container">
+                <select id="routine-selector"></select>
+                <div id="routine-list-panel"></div>
+            </div>
+            <button id="start-button">Start</button>
+        </div>
     </div>
 
-    <div class="routine-list-panel" id="routineListPanel">
-      <h3 id="routineListTitle">Select a routine</h3>
-      <ul id="routineListItems"></ul>
+    <div id="timer-screen">
+        <div id="countdown"></div>
+        <div id="routine-name"></div>
+        <div id="timer-controls">
+            <button id="pause-resume-button" class="timer-button">Pause</button>
+            <button id="stop-button" class="timer-button">Stop</button>
+        </div>
     </div>
-  </div>
 
-  <div id="timerScreen">
-    <div id="countdown">00</div>
-    <div id="routineItemName">Ready</div>
-    <div class="controls">
-      <button id="pauseBtn">Pause</button>
-      <button id="stopBtn">Stop</button>
-    </div>
-  </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(reg => console.log('Service Worker registered.', reg))
+                        .catch(err => console.log('Service Worker registration failed: ', err));
+                });
+            }
+            console.log("Red/Green Timer v0.3 loaded successfully.");
 
-  <script>
-    // ========================================
-    // GLOBALS
-    // ========================================
-    let routines = {
-      "Routine One": ["One", "Two", "Three", "Four", "Five"],
-      "Over the hill": ["Help", "Me", "Now", "OK"],
-      "Loosen Up Standing": ["Semi-Tandem Stand","Tightrope Walking","March & Hold","Kickstand Balance","Side Step","Heel Lifts"],
-      "Strength Standing": ["Sit to Stand","Wall Push-Up","Split Squat","Standing Hip Abduction","Biceps Curl","Calf Raise","Deadlift"],
-      "Cardio Standing": ["March","Mini Kicks","Side Toe Taps","Knee Ups","Hamstring Curl","V-Step Left","V-Step Right"],
-      "Stretching Standing": ["Shoulder Rolls","Side Bends","Forward Fold","Quad Stretch","Hamstring Stretch","Calf Stretch"]
-    };
+            const setupScreen = document.getElementById('setup-screen');
+            const timerScreen = document.getElementById('timer-screen');
+            const startButton = document.getElementById('start-button');
+            const cyclesInput = document.getElementById('cycles-input');
+            const redSecondsInput = document.getElementById('red-seconds-input');
+            const greenSecondsInput = document.getElementById('green-seconds-input');
+            const routineSelector = document.getElementById('routine-selector');
+            const routineListPanel = document.getElementById('routine-list-panel');
+            const countdownDisplay = document.getElementById('countdown');
+            const routineNameDisplay = document.getElementById('routine-name');
+            const pauseResumeButton = document.getElementById('pause-resume-button');
+            const stopButton = document.getElementById('stop-button');
+            const banner = document.getElementById('banner');
 
-    let audioContext;
-    let audioUnlocked = false;
-    let timerInterval;
-    let isPaused = false;
-    let remainingTime = 0;
-    let currentPhase = 'red'; // 'red' or 'green'
-    let currentCycle = 0;
-    let totalCycles = 0;
-    let redSeconds = 0;
-    let greenSeconds = 0;
-    let currentRoutine = [];
-    let currentItemIndex = 0;
-    let scheduledBeeps = [];
+            let audioCtx;
+            let audioUnlocked = false;
 
-    const body = document.body;
-    const setupScreen = document.getElementById('setupScreen');
-    const timerScreen = document.getElementById('timerScreen');
-    const countdown = document.getElementById('countdown');
-    const routineItemName = document.getElementById('routineItemName');
-    const pauseBtn = document.getElementById('pauseBtn');
-    const stopBtn = document.getElementById('stopBtn');
-    const startBtn = document.getElementById('startBtn');
-    const cyclesInput = document.getElementById('cyclesInput');
-    const redInput = document.getElementById('redInput');
-    const greenInput = document.getElementById('greenInput');
-    const routineSelect = document.getElementById('routineSelect');
-    const routineListItems = document.getElementById('routineListItems');
-    const routineListTitle = document.getElementById('routineListTitle');
-    const banner = document.getElementById('banner');
+            function unlockAudio() {
+                if (audioUnlocked || (audioCtx && audioCtx.state === 'running')) return;
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const buffer = audioCtx.createBuffer(1, 1, 22050);
+                const source = audioCtx.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioCtx.destination);
+                source.start(0);
+                audioUnlocked = true;
+                console.log('Audio Context unlocked/resumed.');
+                document.body.removeEventListener('click', unlockAudio);
+                document.body.removeEventListener('touchstart', unlockAudio);
+            }
+            document.body.addEventListener('click', unlockAudio, { once: true });
+            document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
-    // ========================================
-    // AUDIO SETUP
-    // ========================================
-    function initAudio() {
-      if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      }
-    }
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            });
+            
+            function playSound(freq, duration, startTime = 0) {
+                if (!audioUnlocked || !audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                const now = audioCtx.currentTime;
+                const sTime = now + startTime;
+                
+                osc.frequency.setValueAtTime(freq, sTime);
+                gain.gain.setValueAtTime(0.5, sTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, sTime + (duration / 1000));
+                
+                osc.start(sTime);
+                osc.stop(sTime + (duration / 1000));
+            }
 
-    function unlockAudio() {
-      if (audioUnlocked) return;
-      initAudio();
-      const buffer = audioContext.createBuffer(1, 1, 22050);
-      const source = audioContext.createBufferSource();
-      source.buffer = buffer;
-      source.connect(audioContext.destination);
-      source.start(0);
-      audioUnlocked = true;
-    }
+            let timerInterval;
+            let currentPhase;
+            let remainingTime;
+            let currentCycle;
+            let totalCycles;
+            let redSeconds, greenSeconds;
+            let routineItems;
+            let isPaused = false;
+            let beepTimeouts = [];
+            let pauseTime;
 
-    function playBeep(frequency = 880, duration = 120) {
-      if (!audioContext || audioContext.state === 'suspended') {
-        initAudio();
-        if (audioContext.state === 'suspended') {
-          audioContext.resume();
-        }
-      }
+            const fallbackRoutines = {
+              "routines": {
+                "Built-in Routine": ["Item A", "Item B", "Item C"],
+                "Another Choice": ["X", "Y", "Z"]
+              }
+            };
+            let allRoutines = {};
 
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+            async function loadRoutines() {
+                try {
+                    const response = await fetch('routines.json?ts=' + Date.now(), {cache:'no-store'});
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    allRoutines = data.routines;
+                } catch (error) {
+                    console.error('Failed to load routines.json:', error);
+                    allRoutines = fallbackRoutines.routines;
+                    banner.style.display = 'block';
+                } finally {
+                    populateRoutines();
+                }
+            }
 
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+            function populateRoutines() {
+                routineSelector.innerHTML = '';
+                for (const routineName in allRoutines) {
+                    const option = document.createElement('option');
+                    option.value = routineName;
+                    option.textContent = routineName;
+                    routineSelector.appendChild(option);
+                }
+                updateRoutineList();
+            }
 
-      oscillator.frequency.value = frequency;
-      oscillator.type = 'sine';
+            function updateRoutineList() {
+                const selectedRoutine = routineSelector.value;
+                const items = allRoutines[selectedRoutine] || [];
+                routineListPanel.innerHTML = items.map(item => `<div>- ${item}</div>`).join('');
+            }
+            
+            routineSelector.addEventListener('change', updateRoutineList);
 
-      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            function startTimer() {
+                redSeconds = parseInt(redSecondsInput.value, 10);
+                greenSeconds = parseInt(greenSecondsInput.value, 10);
+                totalCycles = parseInt(cyclesInput.value, 10);
 
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + duration / 1000);
-    }
+                if (isNaN(redSeconds) || redSeconds <= 0 || isNaN(greenSeconds) || greenSeconds <= 0) {
+                    alert("Please enter a positive number of seconds.");
+                    return;
+                }
+                
+                unlockAudio();
+                
+                const selectedRoutineName = routineSelector.value;
+                routineItems = allRoutines[selectedRoutineName] || [];
 
-    function playEndChime() {
-      playBeep(660, 120);
-      setTimeout(() => playBeep(880, 120), 180);
-      setTimeout(() => playBeep(1100, 120), 360);
-    }
+                currentCycle = 1;
+                isPaused = false;
+                setupScreen.style.display = 'none';
+                timerScreen.style.display = 'flex';
+                pauseResumeButton.textContent = 'Pause';
+                
+                startPhase('red', redSeconds);
+            }
 
-    // ========================================
-    // ROUTINE LOADING
-    // ========================================
-    async function loadRoutines() {
-      try {
-        const response = await fetch('routines.json?ts=' + Date.now(), { cache: 'no-store' });
-        if (!response.ok) throw new Error('Failed to fetch');
-        const data = await response.json();
-        routines = data.routines;
-      } catch (error) {
-        console.warn('Could not load routines.json, using built-in routines.');
-        banner.style.display = 'block';
-      }
-      populateRoutineSelect();
-    }
+            function startPhase(phase, duration) {
+                currentPhase = phase;
+                remainingTime = duration;
+                
+                timerScreen.style.backgroundColor = (phase === 'red') ? 'var(--red-color)' : 'var(--green-color)';
+                const routineItemIndex = (currentCycle - 1) * 2 + (phase === 'red' ? 0 : 1);
+                routineNameDisplay.textContent = routineItems[routineItemIndex % routineItems.length] || (phase === 'red' ? 'Work' : 'Rest');
+                
+                updateCountdown();
+                scheduleBeeps(duration);
+                timerInterval = setInterval(tick, 1000);
+            }
 
-    function populateRoutineSelect() {
-      routineSelect.innerHTML = '';
-      const keys = Object.keys(routines);
-      keys.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
-        routineSelect.appendChild(option);
-      });
-      if (keys.length > 0) {
-        routineSelect.value = keys[0];
-        updateRoutineList();
-      }
-    }
+            function tick() {
+                if (isPaused) return;
+                
+                remainingTime--;
+                updateCountdown();
 
-    function updateRoutineList() {
-      const selectedRoutine = routineSelect.value;
-      if (!selectedRoutine || !routines[selectedRoutine]) {
-        routineListTitle.textContent = 'Select a routine';
-        routineListItems.innerHTML = '';
-        return;
-      }
-      routineListTitle.textContent = selectedRoutine;
-      routineListItems.innerHTML = '';
-      routines[selectedRoutine].forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        routineListItems.appendChild(li);
-      });
-    }
+                if (remainingTime <= 0) {
+                    nextPhase();
+                }
+            }
 
-    // ========================================
-    // TIMER LOGIC
-    // ========================================
-    function startTimer() {
-      const cycles = parseInt(cyclesInput.value);
-      const red = parseInt(redInput.value);
-      const green = parseInt(greenInput.value);
-      const selectedRoutine = routineSelect.value;
+            function nextPhase() {
+                clearInterval(timerInterval);
+                clearBeeps();
 
-      if (!cycles || cycles < 1 || cycles > 3) {
-        alert('Please enter a valid number of cycles (1-3).');
-        return;
-      }
+                if (currentPhase === 'red') {
+                    startPhase('green', greenSeconds);
+                } else {
+                    currentCycle++;
+                    if (currentCycle > totalCycles) {
+                        endRoutine();
+                    } else {
+                        startPhase('red', redSeconds);
+                    }
+                }
+            }
+            
+            function updateCountdown() {
+                countdownDisplay.textContent = remainingTime;
+            }
 
-      if (!red || red <= 0) {
-        alert('Please enter a positive number of seconds for Red.');
-        return;
-      }
+            function scheduleBeeps(duration) {
+                clearBeeps();
+                for (let i = 1; i <= 5 && i <= duration; i++) {
+                    const timeout = setTimeout(() => playSound(880, 120), (duration - i) * 1000);
+                    beepTimeouts.push(timeout);
+                }
+            }
 
-      if (!green || green <= 0) {
-        alert('Please enter a positive number of seconds for Green.');
-        return;
-      }
+            function clearBeeps() {
+                beepTimeouts.forEach(clearTimeout);
+                beepTimeouts = [];
+            }
 
-      if (!selectedRoutine || !routines[selectedRoutine]) {
-        alert('Please select a routine.');
-        return;
-      }
+            function pauseTimer() {
+                if(isPaused) return;
+                isPaused = true;
+                pauseTime = Date.now();
+                clearInterval(timerInterval);
+                clearBeeps();
+                pauseResumeButton.textContent = 'Resume';
+            }
 
-      unlockAudio();
+            function resumeTimer() {
+                if(!isPaused) return;
+                isPaused = false;
+                pauseResumeButton.textContent = 'Pause';
+                scheduleBeeps(remainingTime);
+                timerInterval = setInterval(tick, 1000);
+            }
 
-      totalCycles = cycles;
-      redSeconds = red;
-      greenSeconds = green;
-      currentRoutine = routines[selectedRoutine];
-      currentCycle = 1;
-      currentItemIndex = 0;
-      currentPhase = 'red';
-      remainingTime = redSeconds;
-      isPaused = false;
+            function stopTimer() {
+                clearInterval(timerInterval);
+                clearBeeps();
+                timerScreen.style.display = 'none';
+                setupScreen.style.display = 'flex';
+            }
+            
+            function endRoutine() {
+                playSound(660, 150, 0);
+                playSound(880, 150, 0.18);
+                playSound(1100, 150, 0.36);
+                stopTimer();
+            }
 
-      setupScreen.style.display = 'none';
-      timerScreen.classList.add('active');
-      body.classList.add('red-phase');
-      body.classList.remove('green-phase');
-
-      updateDisplay();
-      scheduleBeeps();
-      runTimer();
-    }
-
-    function runTimer() {
-      timerInterval = setInterval(() => {
-        if (isPaused) return;
-
-        remainingTime--;
-        updateDisplay();
-
-        if (remainingTime <= 0) {
-          nextPhase();
-        }
-      }, 1000);
-    }
-
-    function nextPhase() {
-      if (currentPhase === 'red') {
-        currentPhase = 'green';
-        remainingTime = greenSeconds;
-        currentItemIndex++;
-        body.classList.remove('red-phase');
-        body.classList.add('green-phase');
-      } else {
-        currentCycle++;
-        if (currentCycle > totalCycles) {
-          endTimer();
-          return;
-        }
-        currentPhase = 'red';
-        remainingTime = redSeconds;
-        currentItemIndex++;
-        body.classList.add('red-phase');
-        body.classList.remove('green-phase');
-      }
-
-      updateDisplay();
-      scheduleBeeps();
-    }
-
-    function updateDisplay() {
-      countdown.textContent = remainingTime.toString().padStart(2, '0');
-      
-      if (currentItemIndex < currentRoutine.length) {
-        routineItemName.textContent = currentRoutine[currentItemIndex];
-      } else {
-        routineItemName.textContent = 'Completed';
-      }
-    }
-
-    function scheduleBeeps() {
-      clearScheduledBeeps();
-      
-      for (let i = 5; i >= 1; i--) {
-        if (i < remainingTime) {
-          const timeout = setTimeout(() => {
-            playBeep(880, 120);
-          }, (remainingTime - i) * 1000);
-          scheduledBeeps.push(timeout);
-        }
-      }
-    }
-
-    function clearScheduledBeeps() {
-      scheduledBeeps.forEach(timeout => clearTimeout(timeout));
-      scheduledBeeps = [];
-    }
-
-    function pauseTimer() {
-      if (isPaused) {
-        isPaused = false;
-        pauseBtn.textContent = 'Pause';
-        scheduleBeeps();
-      } else {
-        isPaused = true;
-        pauseBtn.textContent = 'Resume';
-        clearScheduledBeeps();
-      }
-    }
-
-    function stopTimer() {
-      clearInterval(timerInterval);
-      clearScheduledBeeps();
-      playEndChime();
-      resetUI();
-    }
-
-    function endTimer() {
-      clearInterval(timerInterval);
-      clearScheduledBeeps();
-      playEndChime();
-      setTimeout(() => {
-        resetUI();
-      }, 1000);
-    }
-
-    function resetUI() {
-      timerScreen.classList.remove('active');
-      setupScreen.style.display = 'flex';
-      body.classList.remove('red-phase', 'green-phase');
-      pauseBtn.textContent = 'Pause';
-      isPaused = false;
-    }
-
-    // ========================================
-    // EVENT LISTENERS
-    // ========================================
-    startBtn.addEventListener('click', startTimer);
-    pauseBtn.addEventListener('click', pauseTimer);
-    stopBtn.addEventListener('click', stopTimer);
-    routineSelect.addEventListener('change', updateRoutineList);
-
-    // Audio unlock on first interaction
-    ['click', 'touchstart', 'keydown'].forEach(event => {
-      document.addEventListener(event, unlockAudio, { once: true });
-    });
-
-    // Resume audio context when page becomes visible
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && audioContext && audioContext.state === 'suspended') {
-        audioContext.resume();
-      }
-    });
-
-    // ========================================
-    // SERVICE WORKER REGISTRATION
-    // ========================================
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').then(() => {
-        console.log('Service Worker registered');
-      }).catch(err => {
-        console.warn('Service Worker registration failed:', err);
-      });
-    }
-
-    // ========================================
-    // INITIALIZATION
-    // ========================================
-    loadRoutines();
-    console.log('Red/Green Timer v0.3 loaded successfully.');
-  </script>
-
+            startButton.addEventListener('click', startTimer);
+            stopButton.addEventListener('click', stopTimer);
+            pauseResumeButton.addEventListener('click', () => {
+                isPaused ? resumeTimer() : pauseTimer();
+            });
+            
+            loadRoutines();
+        });
+    </script>
 </body>
 </html>

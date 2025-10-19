@@ -1,7 +1,6 @@
 {
   "name": "Red/Green Timer",
   "short_name": "Timer",
-  "description": "A two-phase exercise timer with red work and green rest periods",
   "start_url": "./index.html",
   "display": "standalone",
   "theme_color": "#111111",

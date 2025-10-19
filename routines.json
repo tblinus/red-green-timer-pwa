@@ -1,7 +1,10 @@
 {
   "routines": {
-    "Routine One": ["Three", "Four", "Five"],
+    "Routine One": ["One", "Two", "Three", "Four", "Five"],
     "Over the hill": ["Help", "Me", "Now", "OK"],
+    "Loosen Up Standing": ["Semi-Tandem Stand","Tightrope Walking","March & Hold","Kickstand Balance","Side Step","Heel Lifts"],
+    "Strength Standing": ["Sit to Stand","Wall Push-Up","Split Squat","Standing Hip Abduction","Biceps Curl","Calf Raise","Deadlift"],
+    "Cardio Standing": ["March","Mini Kicks","Side Toe Taps","Knee Ups","Hamstring Curl","V-Step Left","V-Step Right"],
     "Stretching Standing": ["Shoulder Rolls","Side Bends","Forward Fold","Quad Stretch","Hamstring Stretch","Calf Stretch"]
   }
 }

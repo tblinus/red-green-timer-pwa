@@ -1,62 +1,57 @@
 const CACHE_NAME = 'rg-timer-v0-3';
-const APP_SHELL = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './icon-192.png',
-  './icon-512.png'
+const APP_SHELL_URLS = [
+    './index.html',
+    './manifest.webmanifest',
+    './icon-192.png',
+    './icon-512.png'
 ];
 
-// Install event - cache app shell
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(APP_SHELL);
-    })
-  );
-  self.skipWaiting();
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => {
+                console.log('Opened cache and caching app shell');
+                return cache.addAll(APP_SHELL_URLS);
+            })
+            .catch(err => console.error('Cache addAll failed:', err))
+    );
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames
-          .filter(name => name !== CACHE_NAME)
-          .map(name => caches.delete(name))
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-// Fetch event - network-first for routines.json, cache-first for others
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-
-  // Network-first for routines.json
-  if (url.pathname.includes('routines.json')) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => {
-          return caches.match(event.request);
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cache => {
+                    if (cache !== CACHE_NAME) {
+                        console.log('Deleting old cache:', cache);
+                        return caches.delete(cache);
+                    }
+                })
+            );
         })
     );
-    return;
-  }
+});
 
-  // Cache-first for app shell
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      return response || fetch(event.request);
-    })
-  );
+self.addEventListener('fetch', event => {
+    const requestUrl = new URL(event.request.url);
+
+    // Network-first for routines.json
+    if (requestUrl.pathname.includes('routines.json')) {
+        event.respondWith(
+            fetch(event.request).catch(() => {
+                return caches.match(event.request);
+            })
+        );
+        return;
+    }
+
+    // Cache-first for all other requests
+    event.respondWith(
+        caches.match(event.request).then(cachedResponse => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            return fetch(event.request);
+        })
+    );
 });
