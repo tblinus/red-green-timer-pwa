@@ -1,7 +1,84 @@
 {
   "routines": {
-    "Routine One": ["Three", "Four", "Five"],
-    "Over the hill": ["Help", "Me", "Now", "OK"],
-    "Stretching Standing": ["Shoulder Rolls","Side Bends","Forward Fold","Quad Stretch","Hamstring Stretch","Calf Stretch"]
+    "Stretch 3/27 = 5min": [
+      "Arms to Ceiling On Toes ",
+      "Side-2-Side Hands locked above head",
+      "Both Hamstrings Hands to Toes",
+      "Leg Lunge",
+      "Right Shoulder Hand holds elbow",
+      "Left Shoulder Hand holds elbow",
+      "Seated Hamstring One foot at a time",
+      "Left Quadricep Stand Hold back bent Knee",
+      "Right Quadricep Stand Hold back bent Knee",
+      "Standing Calf"
+    ],
+    "Loosen Up Standing": [
+      "Semi-Tandem Stand",
+      "Tightrope Walking",
+      "March & Hold",
+      "Kickstand Balance",
+      "Side Step",
+      "Heel Lifts"
+    ],
+    "Strength Standing": [
+      "Sit to Stand",
+      "Wall Push-Up",
+      "Split Squat",
+      "Standing Hip Abduction",
+      "Biceps Curl",
+      "Calf Raise",
+      "Deadlift"
+    ],
+    "Cardio Standing": [
+      "March",
+      "Mini Kicks",
+      "Side Toe Taps",
+      "Knee Ups",
+      "Hamstring Curl",
+      "V-Step Left",
+      "V-Step Right"
+    ],
+    "Stretching Standing": [
+      "Shoulder Rolls",
+      "Side Bends",
+      "Forward Fold",
+      "Quad Stretch",
+      "Hamstring Stretch",
+      "Calf Stretch"
+    ],
+    "Loosen Up Seated": [
+      "Lean Backs",
+      "Shoulder Circles",
+      "Seated March",
+      "Heel Lifts",
+      "Side Toe Taps",
+      "Seated Twist"
+    ],
+    "Strength Seated": [
+      "Knee Extension",
+      "Seated Row",
+      "Triceps Extension",
+      "Biceps Curl",
+      "Clamshells",
+      "Seated Deadlift",
+      "Calf Raises"
+    ],
+    "Cardio Seated": [
+      "Heel Digs",
+      "Mini Kicks",
+      "Side Toe Taps",
+      "Toe Taps Forward",
+      "Toe Taps Back",
+      "Step Touch",
+      "Forward & Back Step"
+    ],
+    "Stretching Seated": [
+      "Seated Forward Fold",
+      "Shoulder Stretch",
+      "Torso Twist",
+      "Ankle Circles",
+      "Neck Stretch",
+      "Seated Side Bend"
+    ]
   }
 }
